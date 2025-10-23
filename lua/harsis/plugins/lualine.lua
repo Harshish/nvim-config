@@ -1,0 +1,65 @@
+-- import lualine plugin safely
+local status, lualine = pcall(require, "lualine")
+if not status then
+	return
+end
+
+local status_cvt, codeium_virtual_text = pcall(require, "codeium.virtual_text")
+
+-- get lualine nightfly theme
+local lualine_nightfly = require("lualine.themes.nightfly")
+local lualine_palenight = require("lualine.themes.palenight")
+
+-- new colors for theme
+local new_colors = {
+	blue = "#65D1FF",
+	green = "#3EFFDC",
+	violet = "#FF61EF",
+	yellow = "#FFDA7B",
+	black = "#000000",
+}
+
+-- change nightlfy theme colors
+lualine_nightfly.normal.a.bg = new_colors.blue
+lualine_nightfly.insert.a.bg = new_colors.green
+lualine_nightfly.visual.a.bg = new_colors.violet
+lualine_nightfly.command = {
+	a = {
+		gui = "bold",
+		bg = new_colors.yellow,
+		fg = new_colors.black, -- black
+	},
+}
+
+function Codeium_Status()
+	local cvt_status = codeium_virtual_text.status()
+
+	if cvt_status.state == "idle" then
+		-- Output was cleared, for example when leaving insert mode
+		return " "
+	end
+
+	if cvt_status.state == "waiting" then
+		-- Waiting for response
+		return "Waiting..."
+	end
+
+	if cvt_status.state == "completions" and cvt_status.total > 0 then
+		return string.format("%d/%d", cvt_status.current, cvt_status.total)
+	end
+
+	return " 0 "
+end
+
+local setup_string = {
+	options = {
+		theme = "catppuccin",
+	},
+}
+
+if status_cvt then
+	setup_string.sections = { lualine_c = { Codeium_Status } }
+end
+
+-- configure lualine with modified theme
+lualine.setup(setup_string)
