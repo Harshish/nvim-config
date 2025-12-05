@@ -1,65 +1,86 @@
--- import lualine plugin safely
-local status, lualine = pcall(require, "lualine")
-if not status then
-	return
-end
+return {
+  "nvim-lualine/lualine.nvim",
+  dependencies = { "nvim-tree/nvim-web-devicons" },
+  config = function()
+    local lualine = require("lualine")
+    local lazy_status = require("lazy.status")
 
-local status_cvt, codeium_virtual_text = pcall(require, "codeium.virtual_text")
+    -- Safely require Codeium (optional if not loaded yet)
+    local codeium_status = function()
+      local ok, codeium_virtual_text = pcall(require, "codeium.virtual_text")
+      if not ok then
+        return ""
+      end
 
--- get lualine nightfly theme
-local lualine_nightfly = require("lualine.themes.nightfly")
-local lualine_palenight = require("lualine.themes.palenight")
+      local status = codeium_virtual_text.status_string()
+      if status and status ~= "" then
+        return "󰚩 " .. status -- prepend icon
+      end
+      return ""
+    end
 
--- new colors for theme
-local new_colors = {
-	blue = "#65D1FF",
-	green = "#3EFFDC",
-	violet = "#FF61EF",
-	yellow = "#FFDA7B",
-	black = "#000000",
+    local colors = {
+      blue = "#65D1FF",
+      green = "#3EFFDC",
+      violet = "#FF61EF",
+      yellow = "#FFDA7B",
+      red = "#FF4A4A",
+      fg = "#c3ccdc",
+      bg = "#112638",
+      inactive_bg = "#2c3043",
+    }
+
+    local my_lualine_theme = {
+      normal = {
+        a = { bg = colors.blue, fg = colors.bg, gui = "bold" },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+      },
+      insert = {
+        a = { bg = colors.green, fg = colors.bg, gui = "bold" },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+      },
+      visual = {
+        a = { bg = colors.violet, fg = colors.bg, gui = "bold" },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+      },
+      command = {
+        a = { bg = colors.yellow, fg = colors.bg, gui = "bold" },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+      },
+      replace = {
+        a = { bg = colors.red, fg = colors.bg, gui = "bold" },
+        b = { bg = colors.bg, fg = colors.fg },
+        c = { bg = colors.bg, fg = colors.fg },
+      },
+      inactive = {
+        a = { bg = colors.inactive_bg, fg = colors.fg, gui = "bold" },
+        b = { bg = colors.inactive_bg, fg = colors.fg },
+        c = { bg = colors.inactive_bg, fg = colors.fg },
+      },
+    }
+
+    lualine.setup({
+      options = {
+        theme = my_lualine_theme,
+        globalstatus = true,
+      },
+      sections = {
+        lualine_x = {
+          {
+            lazy_status.updates,
+            cond = lazy_status.has_updates,
+            color = { fg = "#ff9e64" },
+          },
+          codeium_status, -- ✅ shows Codeium’s status dynamically
+          { "encoding" },
+          { "fileformat", symbols = { unix = "" } },
+          { "filetype" },
+        },
+      },
+    })
+  end,
 }
-
--- change nightlfy theme colors
-lualine_nightfly.normal.a.bg = new_colors.blue
-lualine_nightfly.insert.a.bg = new_colors.green
-lualine_nightfly.visual.a.bg = new_colors.violet
-lualine_nightfly.command = {
-	a = {
-		gui = "bold",
-		bg = new_colors.yellow,
-		fg = new_colors.black, -- black
-	},
-}
-
-function Codeium_Status()
-	local cvt_status = codeium_virtual_text.status()
-
-	if cvt_status.state == "idle" then
-		-- Output was cleared, for example when leaving insert mode
-		return " "
-	end
-
-	if cvt_status.state == "waiting" then
-		-- Waiting for response
-		return "Waiting..."
-	end
-
-	if cvt_status.state == "completions" and cvt_status.total > 0 then
-		return string.format("%d/%d", cvt_status.current, cvt_status.total)
-	end
-
-	return " 0 "
-end
-
-local setup_string = {
-	options = {
-		theme = "catppuccin",
-	},
-}
-
-if status_cvt then
-	setup_string.sections = { lualine_c = { Codeium_Status } }
-end
-
--- configure lualine with modified theme
-lualine.setup(setup_string)
