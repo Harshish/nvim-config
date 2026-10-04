@@ -7,7 +7,9 @@ map("i", "jk", "<Esc>", { desc = "Exit insert mode" })
 map("n", "<leader>tf", "<cmd>tabnew %<cr>", { desc = "Open buffer in new tab" })
 map("n", "<leader>rs", "<cmd>LspRestart<cr>", { desc = "Restart LSP" })
 -- your <leader>gb is LazyVim's "Git Blame Line", so branches move to <leader>go
-map("n", "<leader>go", function() Snacks.picker.git_branches() end, { desc = "Git Branches" })
+map("n", "<leader>go", function()
+  Snacks.picker.git_branches()
+end, { desc = "Git Branches" })
 
 -- go to definition in a split or tab
 map("n", "gdv", "<cmd>vsplit | lua vim.lsp.buf.definition()<cr>", { desc = "Definition (vsplit)" })

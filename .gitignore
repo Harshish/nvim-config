@@ -6,3 +6,5 @@ debug
 foo.*
 *.log
 data
+lua/plugins/omarchy-theme-hotreload.lua
+lua/plugins/theme.lua
